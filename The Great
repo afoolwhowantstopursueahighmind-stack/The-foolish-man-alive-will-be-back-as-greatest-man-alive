@@ -1,0 +1,96 @@
+-- ======================================
+-- RENOA HUB | THE FINEST HUB
+-- ======================================
+
+-- Anti AFK
+task.spawn(function()
+    local VirtualUser = game:GetService("VirtualUser")
+    game:GetService("Players").LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+-- ======================================
+-- GLOBAL SAVE/LOAD SYSTEM
+-- ======================================
+local HttpService = game:GetService("HttpService")
+
+function saveHubSettings()
+    pcall(function()
+        writefile("renoa_hub_settings.json", HttpService:JSONEncode(getgenv().HubSettings))
+    end)
+end
+
+function loadHubSettings()
+    local ok, data = pcall(function()
+        return readfile("renoa_hub_settings.json")
+    end)
+    if ok and data then
+        getgenv().HubSettings = HttpService:JSONDecode(data)
+    else
+        getgenv().HubSettings = {}
+    end
+end
+
+loadHubSettings()
+
+-- ======================================
+-- RAYFIELD WINDOW
+-- ======================================
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Renoa Hub | https://discord.gg/GfjXmXkG4E",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "By Renoa The Finest"
+})
+
+getgenv().Window = Window
+
+-- ======================================
+-- ACTIVITY STATUS SYSTEM
+-- ======================================
+if not getgenv().ActivityStatus then
+    getgenv().ActivityStatus = {
+        current = "Idle",
+        trigger = false,
+    }
+end
+
+-- ======================================
+-- TAB LOADER
+-- ======================================
+local function loadTab(url, name)
+    while true do
+        local ok, err = pcall(function()
+            loadstring(game:HttpGet(url))()
+        end)
+        if ok then
+            print("[Hub] " .. name)
+            break
+        end
+        task.wait(0.5)
+    end
+end
+
+-- ======================================
+-- LOAD TABS
+-- ======================================
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/ActivityInfo.Lua", "Activity Info")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Webhook.Lua", "Webhook")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Auto.Lua", "Auto")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Eggs.Lua", "Eggs")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Rift.Lua", "Rift")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Event.Lua", "Event")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Enchant.Lua", "Enchant")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Potion.Lua", "Potions")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Pets.Lua", "Pets")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Shrine.Lua", "Shrine")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Quest.Lua", "Quest")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Diceboard.Lua", "Diceboard")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Trade.lua", "Trade")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Teleport.Lua", "Teleport")
+loadTab("https://raw.githubusercontent.com/AlucardSavage28/Alucardsavage28/refs/heads/main/Other.Lua", "Other")
+
+print("[Hub] All tabs loaded!")
