@@ -44,7 +44,6 @@ function RenoaUI.new(title, subtitle)
     self.Dragging = false
     self.DragStart = nil
     self.StartPos = nil
-    self.Elements = {}
     
     -- ======================================
     -- SCREEN GUI
@@ -115,7 +114,6 @@ function RenoaUI.new(title, subtitle)
     headerGradient.Rotation = 90
     headerGradient.Parent = self.Header
     
-    -- Title
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, -100, 1, 0)
     titleLabel.Position = UDim2.new(0, 12, 0, 0)
@@ -128,7 +126,6 @@ function RenoaUI.new(title, subtitle)
     titleLabel.Parent = self.Header
     self.TitleLabel = titleLabel
     
-    -- Subtitle (optional)
     if subtitle then
         local subtitleLabel = Instance.new("TextLabel")
         subtitleLabel.Size = UDim2.new(1, -100, 0, 12)
@@ -142,9 +139,7 @@ function RenoaUI.new(title, subtitle)
         subtitleLabel.Parent = self.Header
     end
     
-    -- ======================================
-    -- CLOSE BUTTON
-    -- ======================================
+    -- Close Button
     local closeBtn = Instance.new("TextButton")
     closeBtn.Size = UDim2.new(0, 22, 0, 22)
     closeBtn.Position = UDim2.new(1, -28, 0, 5)
@@ -160,9 +155,7 @@ function RenoaUI.new(title, subtitle)
     closeCorner.CornerRadius = UDim.new(0, 6)
     closeCorner.Parent = closeBtn
     
-    -- ======================================
-    -- MINIMIZE BUTTON
-    -- ======================================
+    -- Minimize Button
     local minBtn = Instance.new("TextButton")
     minBtn.Size = UDim2.new(0, 22, 0, 22)
     minBtn.Position = UDim2.new(1, -54, 0, 5)
@@ -219,9 +212,6 @@ function RenoaUI.new(title, subtitle)
         end
     end)
     
-    -- ======================================
-    -- CLOSE + MINIMIZE BEHAVIOR
-    -- ======================================
     closeBtn.MouseButton1Click:Connect(function()
         self.ScreenGui.Enabled = false
     end)
@@ -309,12 +299,13 @@ function RenoaUI.new(title, subtitle)
 end
 
 -- ======================================
--- CREATE TAB
+-- CREATE TAB (WITH PROXY METHODS)
 -- ======================================
 function RenoaUI:CreateTab(name, icon)
+    local window = self
     local tab = {
         Name = name,
-        Window = self,
+        Window = window,
         Elements = {},
     }
     
@@ -329,7 +320,7 @@ function RenoaUI:CreateTab(name, icon)
     button.Font = Enum.Font.GothamBold
     button.BorderSizePixel = 0
     button.AutoButtonColor = false
-    button.Parent = self.Sidebar
+    button.Parent = window.Sidebar
     
     local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(0, 10)
@@ -348,7 +339,7 @@ function RenoaUI:CreateTab(name, icon)
     content.BackgroundTransparency = 1
     content.AutomaticSize = Enum.AutomaticSize.Y
     content.Visible = false
-    content.Parent = self.TabScroll
+    content.Parent = window.TabScroll
     
     local contentLayout = Instance.new("UIListLayout")
     contentLayout.Padding = UDim.new(0, 6)
@@ -361,8 +352,7 @@ function RenoaUI:CreateTab(name, icon)
     
     -- Click Handler
     button.MouseButton1Click:Connect(function()
-        -- Deselect all
-        for _, t in ipairs(self.Tabs) do
+        for _, t in ipairs(window.Tabs) do
             t.Button.BackgroundColor3 = CONFIG.Colors.Element
             t.Button.TextColor3 = CONFIG.Colors.Text
             t.Content.Visible = false
@@ -371,38 +361,74 @@ function RenoaUI:CreateTab(name, icon)
             end
         end
         
-        -- Select this
         button.BackgroundColor3 = CONFIG.Colors.Accent
         button.TextColor3 = Color3.fromRGB(255, 255, 255)
         content.Visible = true
         btnGlow.Transparency = 0.3
-        self.ActiveTab = tab
+        window.ActiveTab = tab
     end)
     
     -- Hover
     button.MouseEnter:Connect(function()
-        if self.ActiveTab ~= tab then
+        if window.ActiveTab ~= tab then
             button.BackgroundColor3 = CONFIG.Colors.ElementHover
         end
     end)
     
     button.MouseLeave:Connect(function()
-        if self.ActiveTab ~= tab then
+        if window.ActiveTab ~= tab then
             button.BackgroundColor3 = CONFIG.Colors.Element
         end
     end)
     
     -- Add to tabs
-    table.insert(self.Tabs, tab)
+    table.insert(window.Tabs, tab)
     
     -- Auto-select first tab
-    if #self.Tabs == 1 then
-        self.ActiveTab = tab
+    if #window.Tabs == 1 then
+        window.ActiveTab = tab
         button.BackgroundColor3 = CONFIG.Colors.Accent
         button.TextColor3 = Color3.fromRGB(255, 255, 255)
         content.Visible = true
         btnGlow.Transparency = 0.3
     end
+    
+    -- ======================================
+    -- PROXY METHODS (Add content to THIS tab)
+    -- ======================================
+    local function withActiveTab(func)
+        return function(...)
+            local oldActive = window.ActiveTab
+            window.ActiveTab = tab
+            local result = func(...)
+            window.ActiveTab = oldActive
+            return result
+        end
+    end
+    
+    tab.CreateSection = withActiveTab(function(title)
+        return window:CreateSection(title)
+    end)
+    
+    tab.CreateLabel = withActiveTab(function(text)
+        return window:CreateLabel(text)
+    end)
+    
+    tab.CreateButton = withActiveTab(function(config)
+        return window:CreateButton(config)
+    end)
+    
+    tab.CreateToggle = withActiveTab(function(config)
+        return window:CreateToggle(config)
+    end)
+    
+    tab.CreateInput = withActiveTab(function(config)
+        return window:CreateInput(config)
+    end)
+    
+    tab.CreateDropdown = withActiveTab(function(config)
+        return window:CreateDropdown(config)
+    end)
     
     return tab
 end
@@ -627,10 +653,6 @@ function RenoaUI:CreateInput(config)
     boxPad.PaddingRight = UDim.new(0, 8)
     boxPad.Parent = box
     
-    if config.RemoveTextAfterFocusLost ~= false then
-        box.ClearTextOnFocus = false
-    end
-    
     box.FocusLost:Connect(function()
         if config.Callback then
             pcall(config.Callback, box.Text)
@@ -650,7 +672,6 @@ function RenoaUI:CreateDropdown(config)
     local multiple = config.MultipleOptions or false
     local selected = {}
     
-    -- Initialize selection
     if multiple then
         if type(config.CurrentOption) == "table" then
             for _, v in ipairs(config.CurrentOption) do
@@ -667,7 +688,6 @@ function RenoaUI:CreateDropdown(config)
         end
     end
     
-    -- Frame
     local frame = Instance.new("Frame")
     frame.Name = "Dropdown_" .. (config.Name or "Dropdown")
     frame.Size = UDim2.new(1, 0, 0, 30)
@@ -680,14 +700,12 @@ function RenoaUI:CreateDropdown(config)
     corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = frame
     
-    -- Header button
     local header = Instance.new("TextButton")
     header.Size = UDim2.new(1, 0, 1, 0)
     header.BackgroundTransparency = 1
     header.Text = ""
     header.Parent = frame
     
-    -- Label
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, -110, 1, 0)
     label.Position = UDim2.new(0, 12, 0, 0)
@@ -699,7 +717,6 @@ function RenoaUI:CreateDropdown(config)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = header
     
-    -- Value
     local valueLabel = Instance.new("TextLabel")
     valueLabel.Size = UDim2.new(0, 95, 1, 0)
     valueLabel.Position = UDim2.new(1, -100, 0, 0)
@@ -710,7 +727,6 @@ function RenoaUI:CreateDropdown(config)
     valueLabel.TextXAlignment = Enum.TextXAlignment.Right
     valueLabel.Parent = header
     
-    -- Options frame
     local optionsFrame = Instance.new("ScrollingFrame")
     optionsFrame.Size = UDim2.new(1, 0, 0, 0)
     optionsFrame.Position = UDim2.new(0, 0, 1, 5)
@@ -782,7 +798,6 @@ function RenoaUI:CreateDropdown(config)
         end
     end
     
-    -- Create option buttons
     for i, option in ipairs(config.Options or {}) do
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, -4, 0, 24)
@@ -823,10 +838,8 @@ function RenoaUI:CreateDropdown(config)
         end)
     end
     
-    -- Update initial value
     updateValueLabel()
     
-    -- Header click
     header.MouseButton1Click:Connect(function()
         isOpen = not isOpen
         if isOpen then
