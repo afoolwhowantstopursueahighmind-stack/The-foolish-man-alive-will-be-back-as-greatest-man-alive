@@ -8,9 +8,6 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
--- ======================================
--- CONFIG
--- ======================================
 local CONFIG = {
     WindowSize = UDim2.new(0, 420, 0, 320),
     MinimizedSize = UDim2.new(0, 420, 0, 32),
@@ -30,9 +27,6 @@ local CONFIG = {
     },
 }
 
--- ======================================
--- RENOA UI CLASS
--- ======================================
 local RenoaUI = {}
 RenoaUI.__index = RenoaUI
 
@@ -45,9 +39,6 @@ function RenoaUI.new(title, subtitle)
     self.DragStart = nil
     self.StartPos = nil
     
-    -- ======================================
-    -- SCREEN GUI
-    -- ======================================
     self.ScreenGui = Instance.new("ScreenGui")
     self.ScreenGui.Name = "RenoaUI"
     self.ScreenGui.ResetOnSpawn = false
@@ -55,9 +46,6 @@ function RenoaUI.new(title, subtitle)
     self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.ScreenGui.Parent = player:WaitForChild("PlayerGui")
     
-    -- ======================================
-    -- MAIN FRAME
-    -- ======================================
     self.MainFrame = Instance.new("Frame")
     self.MainFrame.Name = "MainFrame"
     self.MainFrame.Size = CONFIG.WindowSize
@@ -85,9 +73,6 @@ function RenoaUI.new(title, subtitle)
     mainStroke.Transparency = 0.5
     mainStroke.Parent = self.MainFrame
     
-    -- ======================================
-    -- HEADER
-    -- ======================================
     self.Header = Instance.new("Frame")
     self.Header.Name = "Header"
     self.Header.Size = UDim2.new(1, 0, 0, CONFIG.HeaderHeight)
@@ -139,7 +124,6 @@ function RenoaUI.new(title, subtitle)
         subtitleLabel.Parent = self.Header
     end
     
-    -- Close Button
     local closeBtn = Instance.new("TextButton")
     closeBtn.Size = UDim2.new(0, 22, 0, 22)
     closeBtn.Position = UDim2.new(1, -28, 0, 5)
@@ -155,7 +139,6 @@ function RenoaUI.new(title, subtitle)
     closeCorner.CornerRadius = UDim.new(0, 6)
     closeCorner.Parent = closeBtn
     
-    -- Minimize Button
     local minBtn = Instance.new("TextButton")
     minBtn.Size = UDim2.new(0, 22, 0, 22)
     minBtn.Position = UDim2.new(1, -54, 0, 5)
@@ -171,9 +154,6 @@ function RenoaUI.new(title, subtitle)
     minCorner.CornerRadius = UDim.new(0, 6)
     minCorner.Parent = minBtn
     
-    -- ======================================
-    -- DRAG SYSTEM
-    -- ======================================
     self.Header.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             self.Dragging = true
@@ -227,9 +207,6 @@ function RenoaUI.new(title, subtitle)
         end
     end)
     
-    -- ======================================
-    -- CONTENT FRAME
-    -- ======================================
     self.ContentFrame = Instance.new("Frame")
     self.ContentFrame.Name = "Content"
     self.ContentFrame.Size = UDim2.new(1, 0, 1, -CONFIG.HeaderHeight)
@@ -237,9 +214,6 @@ function RenoaUI.new(title, subtitle)
     self.ContentFrame.BackgroundTransparency = 1
     self.ContentFrame.Parent = self.MainFrame
     
-    -- ======================================
-    -- SIDEBAR
-    -- ======================================
     self.Sidebar = Instance.new("ScrollingFrame")
     self.Sidebar.Name = "Sidebar"
     self.Sidebar.Size = UDim2.new(0, 110, 1, -8)
@@ -268,9 +242,6 @@ function RenoaUI.new(title, subtitle)
     sidebarPad.PaddingBottom = UDim.new(0, 6)
     sidebarPad.Parent = self.Sidebar
     
-    -- ======================================
-    -- TAB SCROLL
-    -- ======================================
     self.TabScroll = Instance.new("ScrollingFrame")
     self.TabScroll.Name = "TabScroll"
     self.TabScroll.Size = UDim2.new(1, -122, 1, -8)
@@ -298,9 +269,6 @@ function RenoaUI.new(title, subtitle)
     return self
 end
 
--- ======================================
--- CREATE TAB (WITH PROXY METHODS)
--- ======================================
 function RenoaUI:CreateTab(name, icon)
     local window = self
     local tab = {
@@ -309,7 +277,6 @@ function RenoaUI:CreateTab(name, icon)
         Elements = {},
     }
     
-    -- Tab Button
     local button = Instance.new("TextButton")
     button.Name = "Tab_" .. name
     button.Size = UDim2.new(1, -6, 0, 30)
@@ -332,7 +299,6 @@ function RenoaUI:CreateTab(name, icon)
     btnGlow.Transparency = 1
     btnGlow.Parent = button
     
-    -- Tab Content
     local content = Instance.new("Frame")
     content.Name = "Content_" .. name
     content.Size = UDim2.new(1, 0, 0, 0)
@@ -350,7 +316,6 @@ function RenoaUI:CreateTab(name, icon)
     tab.Content = content
     tab.Glow = btnGlow
     
-    -- Click Handler
     button.MouseButton1Click:Connect(function()
         for _, t in ipairs(window.Tabs) do
             t.Button.BackgroundColor3 = CONFIG.Colors.Element
@@ -368,7 +333,6 @@ function RenoaUI:CreateTab(name, icon)
         window.ActiveTab = tab
     end)
     
-    -- Hover
     button.MouseEnter:Connect(function()
         if window.ActiveTab ~= tab then
             button.BackgroundColor3 = CONFIG.Colors.ElementHover
@@ -381,10 +345,8 @@ function RenoaUI:CreateTab(name, icon)
         end
     end)
     
-    -- Add to tabs
     table.insert(window.Tabs, tab)
     
-    -- Auto-select first tab
     if #window.Tabs == 1 then
         window.ActiveTab = tab
         button.BackgroundColor3 = CONFIG.Colors.Accent
@@ -393,9 +355,6 @@ function RenoaUI:CreateTab(name, icon)
         btnGlow.Transparency = 0.3
     end
     
-    -- ======================================
-    -- PROXY METHODS (Add content to THIS tab)
-    -- ======================================
     local function withActiveTab(func)
         return function(...)
             local oldActive = window.ActiveTab
@@ -433,9 +392,6 @@ function RenoaUI:CreateTab(name, icon)
     return tab
 end
 
--- ======================================
--- CREATE SECTION
--- ======================================
 function RenoaUI:CreateSection(title)
     local tab = self.ActiveTab
     if not tab then return end
@@ -454,9 +410,6 @@ function RenoaUI:CreateSection(title)
     return section
 end
 
--- ======================================
--- CREATE LABEL
--- ======================================
 function RenoaUI:CreateLabel(text)
     local tab = self.ActiveTab
     if not tab then return end
@@ -477,9 +430,6 @@ function RenoaUI:CreateLabel(text)
     return label
 end
 
--- ======================================
--- CREATE BUTTON
--- ======================================
 function RenoaUI:CreateButton(config)
     local tab = self.ActiveTab
     if not tab then return end
@@ -517,9 +467,6 @@ function RenoaUI:CreateButton(config)
     return button
 end
 
--- ======================================
--- CREATE TOGGLE
--- ======================================
 function RenoaUI:CreateToggle(config)
     local tab = self.ActiveTab
     if not tab then return end
@@ -601,9 +548,6 @@ function RenoaUI:CreateToggle(config)
     return frame
 end
 
--- ======================================
--- CREATE INPUT
--- ======================================
 function RenoaUI:CreateInput(config)
     local tab = self.ActiveTab
     if not tab then return end
@@ -662,9 +606,6 @@ function RenoaUI:CreateInput(config)
     return box
 end
 
--- ======================================
--- CREATE DROPDOWN
--- ======================================
 function RenoaUI:CreateDropdown(config)
     local tab = self.ActiveTab
     if not tab then return end
@@ -672,18 +613,19 @@ function RenoaUI:CreateDropdown(config)
     local multiple = config.MultipleOptions or false
     local selected = {}
     
+    -- HANDLE BOTH STRING AND TABLE CurrentOption
     if multiple then
         if type(config.CurrentOption) == "table" then
             for _, v in ipairs(config.CurrentOption) do
                 selected[v] = true
             end
-        elseif config.CurrentOption then
+        elseif type(config.CurrentOption) == "string" then
             selected[config.CurrentOption] = true
         end
     else
         if type(config.CurrentOption) == "table" then
             selected[config.CurrentOption[1]] = true
-        else
+        elseif type(config.CurrentOption) == "string" then
             selected[config.CurrentOption] = true
         end
     end
@@ -773,11 +715,11 @@ function RenoaUI:CreateDropdown(config)
         if #list == 0 then
             valueLabel.Text = "None"
         elseif #list == 1 then
-            valueLabel.Text = list[1]
+            valueLabel.Text = tostring(list[1])
         elseif #list <= 2 then
-            valueLabel.Text = table.concat(list, ", ")
+            valueLabel.Text = tostring(list[1]) .. ", " .. tostring(list[2])
         else
-            valueLabel.Text = list[1] .. " +" .. (#list - 1)
+            valueLabel.Text = tostring(list[1]) .. " +" .. (#list - 1)
         end
     end
     
@@ -802,7 +744,7 @@ function RenoaUI:CreateDropdown(config)
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, -4, 0, 24)
         optBtn.BackgroundColor3 = selected[option] and CONFIG.Colors.Accent or CONFIG.Colors.Element
-        optBtn.Text = option
+        optBtn.Text = tostring(option)
         optBtn.TextColor3 = CONFIG.Colors.Text
         optBtn.TextSize = 11
         optBtn.Font = Enum.Font.GothamMedium
@@ -856,16 +798,10 @@ function RenoaUI:CreateDropdown(config)
     return frame
 end
 
--- ======================================
--- DESTROY
--- ======================================
 function RenoaUI:Destroy()
     if self.ScreenGui then
         self.ScreenGui:Destroy()
     end
 end
 
--- ======================================
--- RETURN
--- ======================================
 return RenoaUI
