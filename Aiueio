@@ -355,8 +355,9 @@ function RenoaUI:CreateTab(name, icon)
         btnGlow.Transparency = 0.3
     end
     
+    -- PROXY METHODS (self absorbs tab, real args come through)
     local function withActiveTab(func)
-        return function(...)
+        return function(self_arg, ...)
             local oldActive = window.ActiveTab
             window.ActiveTab = tab
             local result = func(...)
@@ -397,10 +398,10 @@ function RenoaUI:CreateSection(title)
     if not tab then return end
     
     local section = Instance.new("TextLabel")
-    section.Name = "Section_" .. title
+    section.Name = "Section_" .. tostring(title)
     section.Size = UDim2.new(1, 0, 0, 20)
     section.BackgroundTransparency = 1
-    section.Text = title
+    section.Text = tostring(title or "")
     section.TextColor3 = CONFIG.Colors.MoonlightBlue
     section.TextSize = 13
     section.Font = Enum.Font.GothamBlack
@@ -418,7 +419,7 @@ function RenoaUI:CreateLabel(text)
     label.Name = "Label"
     label.Size = UDim2.new(1, 0, 0, 16)
     label.BackgroundTransparency = 1
-    label.Text = text
+    label.Text = tostring(text or "")
     label.TextColor3 = CONFIG.Colors.TextDim
     label.TextSize = 11
     label.Font = Enum.Font.GothamMedium
@@ -426,6 +427,13 @@ function RenoaUI:CreateLabel(text)
     label.TextWrapped = true
     label.AutomaticSize = Enum.AutomaticSize.Y
     label.Parent = tab.Content
+    
+    -- Add SetText compatibility
+    if not label.SetText then
+        label.SetText = function(self, txt)
+            self.Text = tostring(txt or "")
+        end
+    end
     
     return label
 end
@@ -435,10 +443,10 @@ function RenoaUI:CreateButton(config)
     if not tab then return end
     
     local button = Instance.new("TextButton")
-    button.Name = "Button_" .. (config.Name or "Button")
+    button.Name = "Button_" .. tostring(config.Name or "Button")
     button.Size = UDim2.new(1, 0, 0, 30)
     button.BackgroundColor3 = CONFIG.Colors.Element
-    button.Text = config.Name or "Button"
+    button.Text = tostring(config.Name or "Button")
     button.TextColor3 = CONFIG.Colors.Text
     button.TextSize = 12
     button.Font = Enum.Font.GothamBold
@@ -474,7 +482,7 @@ function RenoaUI:CreateToggle(config)
     local state = config.CurrentValue or false
     
     local frame = Instance.new("Frame")
-    frame.Name = "Toggle_" .. (config.Name or "Toggle")
+    frame.Name = "Toggle_" .. tostring(config.Name or "Toggle")
     frame.Size = UDim2.new(1, 0, 0, 30)
     frame.BackgroundColor3 = CONFIG.Colors.Element
     frame.BorderSizePixel = 0
@@ -488,7 +496,7 @@ function RenoaUI:CreateToggle(config)
     label.Size = UDim2.new(1, -60, 1, 0)
     label.Position = UDim2.new(0, 12, 0, 0)
     label.BackgroundTransparency = 1
-    label.Text = config.Name or "Toggle"
+    label.Text = tostring(config.Name or "Toggle")
     label.TextColor3 = CONFIG.Colors.Text
     label.TextSize = 12
     label.Font = Enum.Font.GothamMedium
@@ -553,7 +561,7 @@ function RenoaUI:CreateInput(config)
     if not tab then return end
     
     local frame = Instance.new("Frame")
-    frame.Name = "Input_" .. (config.Name or "Input")
+    frame.Name = "Input_" .. tostring(config.Name or "Input")
     frame.Size = UDim2.new(1, 0, 0, 48)
     frame.BackgroundColor3 = CONFIG.Colors.Element
     frame.BorderSizePixel = 0
@@ -567,7 +575,7 @@ function RenoaUI:CreateInput(config)
     label.Size = UDim2.new(1, -20, 0, 18)
     label.Position = UDim2.new(0, 12, 0, 5)
     label.BackgroundTransparency = 1
-    label.Text = config.Name or "Input"
+    label.Text = tostring(config.Name or "Input")
     label.TextColor3 = CONFIG.Colors.Text
     label.TextSize = 11
     label.Font = Enum.Font.GothamMedium
@@ -578,8 +586,8 @@ function RenoaUI:CreateInput(config)
     box.Size = UDim2.new(1, -20, 0, 22)
     box.Position = UDim2.new(0, 10, 0, 23)
     box.BackgroundColor3 = CONFIG.Colors.Background
-    box.Text = config.CurrentValue or ""
-    box.PlaceholderText = config.PlaceholderText or ""
+    box.Text = tostring(config.CurrentValue or "")
+    box.PlaceholderText = tostring(config.PlaceholderText or "")
     box.PlaceholderColor3 = CONFIG.Colors.TextDim
     box.TextColor3 = CONFIG.Colors.Text
     box.TextSize = 11
@@ -613,25 +621,25 @@ function RenoaUI:CreateDropdown(config)
     local multiple = config.MultipleOptions or false
     local selected = {}
     
-    -- HANDLE BOTH STRING AND TABLE CurrentOption
+    -- Handle both string and table CurrentOption
     if multiple then
         if type(config.CurrentOption) == "table" then
             for _, v in ipairs(config.CurrentOption) do
-                selected[v] = true
+                selected[tostring(v)] = true
             end
         elseif type(config.CurrentOption) == "string" then
             selected[config.CurrentOption] = true
         end
     else
         if type(config.CurrentOption) == "table" then
-            selected[config.CurrentOption[1]] = true
+            selected[tostring(config.CurrentOption[1] or "")] = true
         elseif type(config.CurrentOption) == "string" then
             selected[config.CurrentOption] = true
         end
     end
     
     local frame = Instance.new("Frame")
-    frame.Name = "Dropdown_" .. (config.Name or "Dropdown")
+    frame.Name = "Dropdown_" .. tostring(config.Name or "Dropdown")
     frame.Size = UDim2.new(1, 0, 0, 30)
     frame.BackgroundColor3 = CONFIG.Colors.Element
     frame.BorderSizePixel = 0
@@ -652,7 +660,7 @@ function RenoaUI:CreateDropdown(config)
     label.Size = UDim2.new(1, -110, 1, 0)
     label.Position = UDim2.new(0, 12, 0, 0)
     label.BackgroundTransparency = 1
-    label.Text = config.Name or "Dropdown"
+    label.Text = tostring(config.Name or "Dropdown")
     label.TextColor3 = CONFIG.Colors.Text
     label.TextSize = 12
     label.Font = Enum.Font.GothamMedium
@@ -708,18 +716,18 @@ function RenoaUI:CreateDropdown(config)
         local list = {}
         for k, v in pairs(selected) do
             if v then
-                table.insert(list, k)
+                table.insert(list, tostring(k))
             end
         end
         
         if #list == 0 then
             valueLabel.Text = "None"
         elseif #list == 1 then
-            valueLabel.Text = tostring(list[1])
+            valueLabel.Text = list[1]
         elseif #list <= 2 then
-            valueLabel.Text = tostring(list[1]) .. ", " .. tostring(list[2])
+            valueLabel.Text = list[1] .. ", " .. list[2]
         else
-            valueLabel.Text = tostring(list[1]) .. " +" .. (#list - 1)
+            valueLabel.Text = list[1] .. " +" .. tostring(#list - 1)
         end
     end
     
@@ -741,10 +749,11 @@ function RenoaUI:CreateDropdown(config)
     end
     
     for i, option in ipairs(config.Options or {}) do
+        local optStr = tostring(option)
         local optBtn = Instance.new("TextButton")
         optBtn.Size = UDim2.new(1, -4, 0, 24)
-        optBtn.BackgroundColor3 = selected[option] and CONFIG.Colors.Accent or CONFIG.Colors.Element
-        optBtn.Text = tostring(option)
+        optBtn.BackgroundColor3 = selected[optStr] and CONFIG.Colors.Accent or CONFIG.Colors.Element
+        optBtn.Text = optStr
         optBtn.TextColor3 = CONFIG.Colors.Text
         optBtn.TextSize = 11
         optBtn.Font = Enum.Font.GothamMedium
@@ -758,18 +767,18 @@ function RenoaUI:CreateDropdown(config)
         
         optBtn.MouseButton1Click:Connect(function()
             if multiple then
-                selected[option] = not selected[option]
+                selected[optStr] = not selected[optStr]
             else
                 for k, _ in pairs(selected) do
                     selected[k] = false
                 end
-                selected[option] = true
+                selected[optStr] = true
                 isOpen = false
                 optionsFrame.Visible = false
                 optionsFrame.Size = UDim2.new(1, 0, 0, 0)
             end
             
-            if selected[option] then
+            if selected[optStr] then
                 optBtn.BackgroundColor3 = CONFIG.Colors.Accent
             else
                 optBtn.BackgroundColor3 = CONFIG.Colors.Element
