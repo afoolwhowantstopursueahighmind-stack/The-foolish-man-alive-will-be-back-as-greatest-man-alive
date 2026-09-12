@@ -355,7 +355,6 @@ function RenoaUI:CreateTab(name, icon)
         btnGlow.Transparency = 0.3
     end
     
-    -- PROXY METHODS (self absorbs tab, real args come through)
     local function withActiveTab(func)
         return function(self_arg, ...)
             local oldActive = window.ActiveTab
@@ -411,6 +410,9 @@ function RenoaUI:CreateSection(title)
     return section
 end
 
+-- ======================================
+-- CREATE LABEL (WITH WRAPPER FOR SETTEXT)
+-- ======================================
 function RenoaUI:CreateLabel(text)
     local tab = self.ActiveTab
     if not tab then return end
@@ -428,14 +430,33 @@ function RenoaUI:CreateLabel(text)
     label.AutomaticSize = Enum.AutomaticSize.Y
     label.Parent = tab.Content
     
-    -- Add SetText compatibility
-    if not label.SetText then
-        label.SetText = function(self, txt)
-            self.Text = tostring(txt or "")
-        end
+    -- Wrapper with SetText support
+    local wrapper = {
+        _label = label,
+    }
+    
+    function wrapper:SetText(txt)
+        label.Text = tostring(txt or "")
     end
     
-    return label
+    -- Metatable for property access
+    setmetatable(wrapper, {
+        __index = function(t, k)
+            if k == "_label" or k == "SetText" then
+                return rawget(t, k)
+            end
+            return label[k]
+        end,
+        __newindex = function(t, k, v)
+            if k == "_label" or k == "SetText" then
+                rawset(t, k, v)
+            else
+                label[k] = v
+            end
+        end,
+    })
+    
+    return wrapper
 end
 
 function RenoaUI:CreateButton(config)
@@ -621,7 +642,6 @@ function RenoaUI:CreateDropdown(config)
     local multiple = config.MultipleOptions or false
     local selected = {}
     
-    -- Handle both string and table CurrentOption
     if multiple then
         if type(config.CurrentOption) == "table" then
             for _, v in ipairs(config.CurrentOption) do
